@@ -7,13 +7,15 @@
 
 (sql/defentity listings
   (sql/pk :id)
-  (sql/entity-fields :id :price :walkscore :url :source))
+  (sql/entity-fields :id :price :sqft :style :walkscore :url :source))
 
 (defn create! []
   (sql/exec-raw sqlite3-db
                 (str "create table if not exists listings ("
                      "id text,"
                      "price integer,"
+                     "sqft integer,"
+                     "style text,"
                      "walkscore integer,"
                      "url text,"
                      "source text"
@@ -24,6 +26,8 @@
   (sql/insert listings
               (sql/values {:id (:id row-info)
                            :price (:price row-info)
+                           :sqft (:sqft row-info)
+                           :style (:style row-info)
                            :walkscore (-> row-info :walkscore :score)
                            :url (:url row-info)
                            :source (:source row-info)})))
