@@ -5,9 +5,11 @@
 
 (def area "sfbay")
 (def section "apa")
-(def base-url (format "https://%s.craigslist.org/search/%s/"
-                      area
-                      section))
+(def base-url (format "https://%s.craigslist.org"
+                      area))
+(def search-url (format "%s/search/%s"
+                        base-url
+                        section))
 
 (defn fetch-url [url]
   (html/html-resource (java.net.URL. url)))
@@ -16,20 +18,42 @@
   (let [param-strings (map #(str (-> % first name) "=" (second %))
                            params)
         joined-params (clojure.string/join "&" param-strings)
-        url (str base-url "?" joined-params)]
+        url (str search-url "?" joined-params)]
     (fetch-url url)))
 
 (defn select-rows [html-data]
   (html/select html-data [:p.result-info]))
 
-(defn row-info [row]
-  (let [link (first (html/select row [:a.hdrlnk]))
+(defn row-link [row-data row-info]
+  (let [link (first (html/select row-data [:a.hdrlnk]))
+        url (str base-url (-> link :attrs :href))
         id (-> link :attrs :data-id)
-        content (:content link)
-        url (str base-url (-> link :attrs :href))]
-    {:id id
-     :content content
-     :url url}))
+        content (-> link :content first)]
+  (assoc row-info
+         :id id
+         :content content
+         :url url)))
+
+(defn row-date [row-data row-info]
+  (let [date (-> (html/select row-data [:time]) first :attrs :datetime)]
+    (assoc row-info
+           :date date)))
+
+(defn row-price [row-data row-info]
+  (let [price-str (-> (html/select row-data [:span.result-price])
+                      first
+                      :content
+                      first)
+        valid? (re-matches #"\$\d+" (or price-str ""))
+        price (when valid?
+                (Integer/parseInt (subs price-str 1)))]
+    (assoc row-info
+           :price price)))
+
+(defn row-info [row-data]
+  (let [extractors [row-link row-date row-price]
+        info (reduce #(%2 row-data %1) {} extractors)]
+    info))
 
 (defn -main
   [& args]
