@@ -1,8 +1,10 @@
 (ns clouse.core
   (:gen-class)
   (:require [net.cgrand.enlive-html :refer [html-resource select first-child]]
+            [environ.core :refer [env]]
             [clojure.pprint :refer :all]
-            [clojure.walk :refer [postwalk]]))
+            [clojure.walk :refer [postwalk]]
+            [clojure.data.json :as json]))
 
 ; TODO:
 ; - amenities
@@ -62,7 +64,7 @@
         content (-> link :content first)]
   (assoc row-info
          :id id
-         :content content
+         :title content
          :url url)))
 
 (defn row-post-date [row-data row-info]
@@ -120,14 +122,30 @@
     (assoc row-info
            :attributes useful)))
 
+(defn row-walk-score [html-data row-info]
+  (if-not (or (:geotag row-info)
+              (env :walkscore-key))
+    row-info
+    (let [lat-long (:geotag row-info)
+          base-url "http://api.walkscore.com/score?format=json&lat=%s&lon=%s&wsapikey=%s"
+          url (format base-url
+                      (first lat-long)
+                      (second lat-long)
+                      (env :walkscore-key))
+          walk-data (json/read-str (slurp url)
+                                   :key-fn keyword)]
+      (assoc row-info
+             :walkscore {:score (:walkscore walk-data)
+                         :description (:description walk-data)
+                         :url (:ws_link walk-data)}))))
+
 (defn row-info [row-data]
   (let [basic-extractors [row-link row-post-date row-price row-where row-tags]
-        basic-info (reductions #(%2 row-data %1) {} basic-extractors)
+        basic-info (reduce #(%2 row-data %1) {} basic-extractors)
         ; TODO: Check if it's a new entry; bail otherwise
         html-data (fetch-url (:url basic-info))
-        detailed-extractors [row-geotag row-available-date row-attributes]
-        detailed-info (reduce #(%2 html-data %1) basic-info detailed-extractors)
-        ]
+        detailed-extractors [row-geotag row-available-date row-attributes row-walk-score]
+        detailed-info (reduce #(%2 html-data %1) basic-info detailed-extractors)]
     detailed-info))
 
 (defn total-count [html-data]
