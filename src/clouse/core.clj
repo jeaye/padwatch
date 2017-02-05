@@ -71,8 +71,18 @@
     (assoc row-info
            :tags (flatten useful))))
 
+(defn row-geotag [row-data row-info]
+  (if (not (some #{"map"} (:tags row-info)))
+    row-info
+    (let [html-data (fetch-url (:url row-info))
+          map-data (first (html/select html-data [:div#map]))
+          lat-long (when map-data
+                     (map (:attrs map-data) [:data-latitude :data-longitude]))]
+      (assoc row-info
+             :geotag lat-long))))
+
 (defn row-info [row-data]
-  (let [extractors [row-link row-date row-price row-where row-tags]
+  (let [extractors [row-link row-date row-price row-where row-tags row-geotag]
         info (reduce #(%2 row-data %1) {} extractors)]
     info))
 
