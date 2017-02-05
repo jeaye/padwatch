@@ -60,8 +60,19 @@
     (assoc row-info
            :where trimmed)))
 
+(defn row-tags [row-data row-info]
+  (let [tags (-> (html/select row-data [:span.result-tags]) first :content)
+        clean #(cond
+                 (string? %) (clojure.string/trim %)
+                 (map? %) (:content %)
+                 :else %)
+        cleaned (map clean tags)
+        useful (filter not-empty cleaned)]
+    (assoc row-info
+           :tags (flatten useful))))
+
 (defn row-info [row-data]
-  (let [extractors [row-link row-date row-price row-where]
+  (let [extractors [row-link row-date row-price row-where row-tags]
         info (reduce #(%2 row-data %1) {} extractors)]
     info))
 
