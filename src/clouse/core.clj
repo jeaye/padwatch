@@ -52,7 +52,7 @@
 
 (defn row-where [row-data row-info]
   (let [where (-> (html/select row-data [:span.result-hood]) first :content first)
-        trimmed (->> where
+        trimmed (->> (or where "")
                      clojure.string/trim
                      (drop 1)
                      butlast
