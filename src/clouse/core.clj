@@ -1,12 +1,11 @@
 (ns clouse.core
   (:gen-class)
-  (:require [net.cgrand.enlive-html :as html]
+  (:require [net.cgrand.enlive-html :refer [html-resource select first-child]]
             [clojure.pprint :refer :all]
             [clojure.walk :refer [postwalk]]))
 
 ; TODO:
-; - sqft and amenities
-; - date available (Mar 1st onward)
+; - amenities
 ; - walkscore
 ; - crime?
 ; - pets/smoking
@@ -32,10 +31,13 @@
                    :availabilityMode 0 ; All dates
                    :bedrooms 1
                    :bathrooms 1
-                   :sort "date"})
+                   :sort "date"
+                   :bundleDuplicates 0})
+
+(def select-first (comp first select))
 
 (defn fetch-url [url]
-  (html/html-resource (java.net.URL. url)))
+  (html-resource (java.net.URL. url)))
 
 (defn query [params]
   (let [param-strings (map #(str (-> % first name) "=" (second %))
@@ -51,10 +53,10 @@
     :else tags))
 
 (defn select-rows [html-data]
-  (html/select html-data [:p.result-info]))
+  (select html-data [:p.result-info]))
 
 (defn row-link [row-data row-info]
-  (let [link (first (html/select row-data [:a.hdrlnk]))
+  (let [link (select-first row-data [:a.hdrlnk])
         url (str base-url (-> link :attrs :href))
         id (-> link :attrs :data-id)
         content (-> link :content first)]
@@ -64,13 +66,12 @@
          :url url)))
 
 (defn row-post-date [row-data row-info]
-  (let [post-date (-> (html/select row-data [:time]) first :attrs :datetime)]
+  (let [post-date (-> (select-first row-data [:time]) :attrs :datetime)]
     (assoc row-info
            :post-date post-date)))
 
 (defn row-price [row-data row-info]
-  (let [price-str (-> (html/select row-data [:span.result-price])
-                      first
+  (let [price-str (-> (select-first row-data [:span.result-price])
                       :content
                       first)
         valid? (re-matches #"\$\d+" (or price-str ""))
@@ -80,7 +81,7 @@
            :price price)))
 
 (defn row-where [row-data row-info]
-  (let [where (-> (html/select row-data [:span.result-hood]) first :content first)
+  (let [where (-> (select-first row-data [:span.result-hood]) :content first)
         trimmed (->> (or where "")
                      clojure.string/trim
                      (drop 1)
@@ -90,7 +91,7 @@
            :where trimmed)))
 
 (defn row-tags [row-data row-info]
-  (let [tags (-> (html/select row-data [:span.result-tags]) first :content)
+  (let [tags (-> (select-first row-data [:span.result-tags]) :content)
         cleaned (map clean-tags tags)
         useful (filter not-empty cleaned)]
     (assoc row-info
@@ -99,22 +100,21 @@
 (defn row-geotag [html-data row-info]
   (if (not (some #{"map"} (:tags row-info)))
     row-info
-    (let [map-data (first (html/select html-data [:div#map]))
+    (let [map-data (select-first html-data [:div#map])
           lat-long (when map-data
                      (map (:attrs map-data) [:data-latitude :data-longitude]))]
       (assoc row-info
              :geotag lat-long))))
 
 (defn row-available-date [html-data row-info]
-  (let [available-date (-> (html/select html-data [:span.housing_movein_now])
-                           first
+  (let [available-date (-> (select-first html-data [:span.housing_movein_now])
                            :attrs
                            :data-date)]
     (assoc row-info
            :available-date available-date)))
 
 (defn row-attributes [html-data row-info]
-  (let [content (-> (html/select geo-results [:p.attrgroup]) first :content)
+  (let [content (-> (select-first html-data [:p.attrgroup]) :content)
         cleaned (postwalk clean-tags content)
         useful (filter not-empty cleaned)]
     (assoc row-info
@@ -122,16 +122,16 @@
 
 (defn row-info [row-data]
   (let [basic-extractors [row-link row-post-date row-price row-where row-tags]
-        basic-info (reduce #(%2 row-data %1) {} basic-extractors)
+        basic-info (reductions #(%2 row-data %1) {} basic-extractors)
         ; TODO: Check if it's a new entry; bail otherwise
         html-data (fetch-url (:url basic-info))
         detailed-extractors [row-geotag row-available-date row-attributes]
-        detailed-info (reduce #(%2 html-data %1) basic-info detailed-extractors)]
+        detailed-info (reduce #(%2 html-data %1) basic-info detailed-extractors)
+        ]
     detailed-info))
 
 (defn total-count [html-data]
-  (let [count-str  (-> (html/select html-data [:span.totalcount])
-                       first
+  (let [count-str  (-> (select-first html-data [:span.totalcount])
                        :content
                        first)]
     (Integer/parseInt (or count-str "0"))))
