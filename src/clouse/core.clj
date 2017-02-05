@@ -118,9 +118,9 @@
         cleaned (postwalk clean-tags content)
         useful (filter not-empty cleaned)
         sqft-str (second useful)
-        valid-sqft? (re-matches #"(\d+)ft2" (or sqft-str ""))
-        sqft (when valid-sqft?
-               (Integer/parseInt (second valid-sqft?)))]
+        sqft-match (re-matches #"(\d+)ft2" (or sqft-str ""))
+        sqft (when sqft-match
+               (Integer/parseInt (second sqft-match)))]
     (assoc row-info
            :style (first useful)
            :sqft sqft)))
@@ -143,13 +143,19 @@
                          :url (:ws_link walk-data)}))))
 
 (defn row-info [row-data]
-  (let [basic-extractors [row-link row-post-date row-price row-where row-tags]
-        basic-info (reduce #(%2 row-data %1) {} basic-extractors)
-        ; TODO: Check if it's a new entry; bail otherwise
-        html-data (fetch-url (:url basic-info))
-        detailed-extractors [row-geotag row-available-date row-attributes row-walk-score]
-        detailed-info (reduce #(%2 html-data %1) basic-info detailed-extractors)]
-    detailed-info))
+  (let [link-info (row-link row-data {})]
+    (when (empty? (db/select {:id (:id link-info)}))
+      (let [basic-extractors [row-post-date row-price row-where row-tags]
+            basic-info (reduce #(%2 row-data %1)
+                               link-info
+                               basic-extractors)
+            html-data (fetch-url (:url basic-info))
+            detailed-extractors [row-geotag row-available-date
+                                 row-attributes row-walk-score]
+            detailed-info (reduce #(%2 html-data %1)
+                                  basic-info
+                                  detailed-extractors)]
+        detailed-info))))
 
 (defn total-count [html-data]
   (let [count-str  (-> (select-first html-data [:span.totalcount])
@@ -157,6 +163,5 @@
                        first)]
     (Integer/parseInt (or count-str "0"))))
 
-(defn -main
-  [& args]
-  )
+(defn -main [& args]
+  (db/create!))
