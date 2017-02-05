@@ -2,9 +2,7 @@
   (:gen-class)
   (:require [net.cgrand.enlive-html :refer [html-resource select first-child]]
             [environ.core :refer [env]]
-            [korma
-             [core :as sql]
-             [db :as db]]
+            [clouse.db :as db]
             [clojure.pprint :refer :all]
             [clojure.walk :refer [postwalk]]
             [clojure.data.json :as json]))
@@ -66,6 +64,7 @@
         id (-> link :attrs :data-id)
         content (-> link :content first)]
   (assoc row-info
+         :source "craigslist"
          :id id
          :title content
          :url url)))
@@ -156,16 +155,6 @@
                        :content
                        first)]
     (Integer/parseInt (or count-str "0"))))
-
-(db/defdb sqlite3-db (db/sqlite3 {}))
-
-;(sql/exec-raw sqlite3-db "create table if not exists craigslist (id text)" :keys)
-;(sql/insert craigslist (sql/values {:id "foobar"}))
-;(sql/select craigslist (sql/where {:id "foobar"}))
-
-(sql/defentity craigslist
-  (sql/pk :id)
-  (sql/entity-fields :id))
 
 (defn -main
   [& args]
