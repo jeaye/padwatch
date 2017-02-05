@@ -22,6 +22,17 @@
                         base-url
                         section))
 
+(def query-params {:min_price 1500
+                   :max_price 3000
+                   :hasPic 1
+                   :minSqft 600
+                   :maxSqft 1000
+                   :no_smoking 1
+                   :availabilityMode 0 ; All dates
+                   :bedrooms 1
+                   :bathrooms 1
+                   :sort "date"})
+
 (defn fetch-url [url]
   (html/html-resource (java.net.URL. url)))
 
@@ -108,8 +119,13 @@
         detailed-info (reduce #(%2 html-data %1) basic-info detailed-extractors)]
     detailed-info))
 
+(defn total-count [html-data]
+  (let [count-str  (-> (html/select html-data [:span.totalcount])
+                       first
+                       :content
+                       first)]
+    (Integer/parseInt (or count-str "0"))))
+
 (defn -main
   [& args]
-  (pprint (query {:min_price 1500
-                  :max_price 3000
-                  :hasPic 1})))
+  (pprint (query query-params)))
