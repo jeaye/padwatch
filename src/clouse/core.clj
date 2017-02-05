@@ -19,6 +19,18 @@
         url (str base-url "?" joined-params)]
     (fetch-url url)))
 
+(defn select-rows [html-data]
+  (html/select html-data [:p.result-info]))
+
+(defn row-info [row]
+  (let [link (first (html/select row [:a.hdrlnk]))
+        id (-> link :attrs :data-id)
+        content (:content link)
+        url (str base-url (-> link :attrs :href))]
+    {:id id
+     :content content
+     :url url}))
+
 (defn -main
   [& args]
   (pprint (query {:min_price 1500
