@@ -9,12 +9,8 @@
 
 ; TODO:
 ; - amenities
-; - walkscore
 ; - crime?
 ; - pets/smoking
-; - neighborhoods? -- nope
-; - points of interest -- nope
-; - transit? time to work? -- nope
 ; - allow useful query params
 
 (def area "sfbay")
@@ -120,9 +116,14 @@
 (defn row-attributes [html-data row-info]
   (let [content (-> (select-first html-data [:p.attrgroup]) :content)
         cleaned (postwalk clean-tags content)
-        useful (filter not-empty cleaned)]
+        useful (filter not-empty cleaned)
+        sqft-str (second useful)
+        valid-sqft? (re-matches #"(\d+)ft2" (or sqft-str ""))
+        sqft (when valid-sqft?
+               (Integer/parseInt (second valid-sqft?)))]
     (assoc row-info
-           :attributes useful)))
+           :style (first useful)
+           :sqft sqft)))
 
 (defn row-walk-score [html-data row-info]
   (if-not (or (:geotag row-info)
@@ -158,4 +159,4 @@
 
 (defn -main
   [& args]
-  (pprint (query query-params)))
+  )
