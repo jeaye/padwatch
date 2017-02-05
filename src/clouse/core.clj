@@ -1,7 +1,8 @@
 (ns clouse.core
   (:gen-class)
   (:require [net.cgrand.enlive-html :as html]
-            [clojure.pprint :refer :all]))
+            [clojure.pprint :refer :all]
+            [clojure.walk :refer [postwalk]]))
 
 ; TODO:
 ; - sqft and amenities
@@ -86,7 +87,7 @@
   (let [tags (-> (html/select row-data [:span.result-tags]) first :content)
         clean #(cond
                  (string? %) (clojure.string/trim %)
-                 (map? %) (:content %)
+                 (map? %) (apply str (:content %))
                  :else %)
         cleaned (map clean tags)
         useful (filter not-empty cleaned)]
@@ -110,12 +111,23 @@
     (assoc row-info
            :available-date available-date)))
 
+(defn row-attributes [html-data row-info]
+  (let [content (-> (html/select geo-results [:p.attrgroup]) first :content)
+        cleaned (postwalk #(cond ; TODO: Same as clean function above
+                                 (string? %) (clojure.string/trim %)
+                                 (map? %) (apply str (:content %))
+                                 :else %)
+                          content)
+        useful (filter not-empty cleaned)]
+    (assoc row-info
+           :attributes useful)))
+
 (defn row-info [row-data]
   (let [basic-extractors [row-link row-post-date row-price row-where row-tags]
         basic-info (reduce #(%2 row-data %1) {} basic-extractors)
         ; TODO: Check if it's a new entry; bail otherwise
         html-data (fetch-url (:url basic-info))
-        detailed-extractors [row-geotag row-available-date]
+        detailed-extractors [row-geotag row-available-date row-attributes]
         detailed-info (reduce #(%2 html-data %1) basic-info detailed-extractors)]
     detailed-info))
 
