@@ -50,8 +50,18 @@
     (assoc row-info
            :price price)))
 
+(defn row-where [row-data row-info]
+  (let [where (-> (html/select row-data [:span.result-hood]) first :content first)
+        trimmed (->> where
+                     clojure.string/trim
+                     (drop 1)
+                     butlast
+                     (apply str))]
+    (assoc row-info
+           :where trimmed)))
+
 (defn row-info [row-data]
-  (let [extractors [row-link row-date row-price]
+  (let [extractors [row-link row-date row-price row-where]
         info (reduce #(%2 row-data %1) {} extractors)]
     info))
 
