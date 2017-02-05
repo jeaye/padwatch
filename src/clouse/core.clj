@@ -44,6 +44,12 @@
         url (str search-url "?" joined-params)]
     (fetch-url url)))
 
+(defn clean-tags [tags]
+  (cond
+    (string? tags) (clojure.string/trim tags)
+    (map? tags) (apply str (:content tags))
+    :else tags))
+
 (defn select-rows [html-data]
   (html/select html-data [:p.result-info]))
 
@@ -85,11 +91,7 @@
 
 (defn row-tags [row-data row-info]
   (let [tags (-> (html/select row-data [:span.result-tags]) first :content)
-        clean #(cond
-                 (string? %) (clojure.string/trim %)
-                 (map? %) (apply str (:content %))
-                 :else %)
-        cleaned (map clean tags)
+        cleaned (map clean-tags tags)
         useful (filter not-empty cleaned)]
     (assoc row-info
            :tags (flatten useful))))
@@ -113,11 +115,7 @@
 
 (defn row-attributes [html-data row-info]
   (let [content (-> (html/select geo-results [:p.attrgroup]) first :content)
-        cleaned (postwalk #(cond ; TODO: Same as clean function above
-                                 (string? %) (clojure.string/trim %)
-                                 (map? %) (apply str (:content %))
-                                 :else %)
-                          content)
+        cleaned (postwalk clean-tags content)
         useful (filter not-empty cleaned)]
     (assoc row-info
            :attributes useful)))
