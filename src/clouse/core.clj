@@ -3,6 +3,17 @@
   (:require [net.cgrand.enlive-html :as html]
             [clojure.pprint :refer :all]))
 
+; TODO:
+; - sqft and amenities
+; - date available (Mar 1st onward)
+; - walkscore
+; - crime?
+; - pets/smoking
+; - neighborhoods? -- nope
+; - points of interest -- nope
+; - transit? time to work? -- nope
+; - allow useful query params
+
 (def area "sfbay")
 (def section "apa")
 (def base-url (format "https://%s.craigslist.org"
@@ -34,10 +45,10 @@
          :content content
          :url url)))
 
-(defn row-date [row-data row-info]
-  (let [date (-> (html/select row-data [:time]) first :attrs :datetime)]
+(defn row-post-date [row-data row-info]
+  (let [post-date (-> (html/select row-data [:time]) first :attrs :datetime)]
     (assoc row-info
-           :date date)))
+           :post-date post-date)))
 
 (defn row-price [row-data row-info]
   (let [price-str (-> (html/select row-data [:span.result-price])
@@ -71,22 +82,34 @@
     (assoc row-info
            :tags (flatten useful))))
 
-(defn row-geotag [row-data row-info]
+(defn row-geotag [html-data row-info]
   (if (not (some #{"map"} (:tags row-info)))
     row-info
-    (let [html-data (fetch-url (:url row-info))
-          map-data (first (html/select html-data [:div#map]))
+    (let [map-data (first (html/select html-data [:div#map]))
           lat-long (when map-data
                      (map (:attrs map-data) [:data-latitude :data-longitude]))]
       (assoc row-info
              :geotag lat-long))))
 
+(defn row-available-date [html-data row-info]
+  (let [available-date (-> (html/select html-data [:span.housing_movein_now])
+                           first
+                           :attrs
+                           :data-date)]
+    (assoc row-info
+           :available-date available-date)))
+
 (defn row-info [row-data]
-  (let [extractors [row-link row-date row-price row-where row-tags row-geotag]
-        info (reduce #(%2 row-data %1) {} extractors)]
-    info))
+  (let [basic-extractors [row-link row-post-date row-price row-where row-tags]
+        basic-info (reduce #(%2 row-data %1) {} basic-extractors)
+        ; TODO: Check if it's a new entry; bail otherwise
+        html-data (fetch-url (:url basic-info))
+        detailed-extractors [row-geotag row-available-date]
+        detailed-info (reduce #(%2 html-data %1) basic-info detailed-extractors)]
+    detailed-info))
 
 (defn -main
   [& args]
   (pprint (query {:min_price 1500
-                  :max_price 3000})))
+                  :max_price 3000
+                  :hasPic 1})))
