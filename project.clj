@@ -9,7 +9,8 @@
                  [enlive "1.1.6"]
                  [environ "1.1.0"]
                  [korma "0.4.3"]
-                 [org.xerial/sqlite-jdbc "3.7.15-M1"]]
+                 [org.xerial/sqlite-jdbc "3.7.15-M1"]
+                 [irclj "0.5.0-alpha4"]]
   :main ^:skip-aot clouse.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})

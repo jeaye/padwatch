@@ -2,7 +2,9 @@
   (:gen-class)
   (:require [net.cgrand.enlive-html :refer [html-resource select first-child]]
             [environ.core :refer [env]]
-            [clouse.db :as db]
+            [clouse
+             [db :as db]
+             [irc :as irc]]
             [clojure.pprint :refer :all]
             [clojure.walk :refer [postwalk]]
             [clojure.data.json :as json]))
@@ -157,7 +159,7 @@
 
 (defn row-info [row-data]
   (let [link-info (row-link row-data {})]
-    (when (empty? (db/select {:id (:id link-info)}))
+    (when (not-empty (db/select {:id (:id link-info)}))
       (let [basic-extractors [row-post-date row-price
                               row-where row-tags]
             basic-info (reduce #(%2 row-data %1)
@@ -181,9 +183,10 @@
 
 (defn -main [& args]
   (db/create!)
+  (irc/connect!)
   (let [html-data (query query-params)
         rows (take max-rows (select-rows html-data))
         row-infos (filter some? (map row-info rows))]
     (doseq [row row-infos]
-      (db/insert! row))
-    (pprint row-infos)))
+      (irc/message! row)
+      (db/insert! row))))
