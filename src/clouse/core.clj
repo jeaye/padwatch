@@ -159,7 +159,7 @@
 
 (defn row-info [row-data]
   (let [link-info (row-link row-data {})]
-    (when (not-empty (db/select {:id (:id link-info)}))
+    (when (empty (db/select {:id (:id link-info)}))
       (let [basic-extractors [row-post-date row-price
                               row-where row-tags]
             basic-info (reduce #(%2 row-data %1)

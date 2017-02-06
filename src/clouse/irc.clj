@@ -20,11 +20,15 @@
                                   :callbacks {:raw-log eat-log}))
   (irc/join @connection channel))
 
+(defn shorten-url [url]
+  (slurp (str "http://tinyurl.com/api-create.php?url=" url)))
+
 (defn message! [row-info]
   (let [useful {:title (:title row-info) ; TODO: extract helper
                 :where (:where row-info)
                 :style (:style row-info)
                 :sqft (:sqft row-info)
-                :url (:url row-info) ; TODO: tinyurl
-                :walkscore (:walkscore row-info)}]
+                :url (-> row-info :url shorten-url)
+                :walkscore (update (:walkscore row-info)
+                                   :url shorten-url)}]
     (irc/message @connection channel (pr-str useful))))
