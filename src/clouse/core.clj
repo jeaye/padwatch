@@ -36,6 +36,7 @@
                    :bundleDuplicates 0})
 
 (def max-rows 5)
+(def refresh-delay-ms (* 1000 60 20)) ; ms -> minutes
 
 (def select-first (comp first select))
 
@@ -184,9 +185,13 @@
 (defn -main [& args]
   (db/create!)
   (irc/connect!)
-  (let [html-data (query query-params)
+  (loop []
+    (println "Scraping...")
+    (let [html-data (query query-params)
         rows (take max-rows (select-rows html-data))
         row-infos (filter some? (map row-info rows))]
     (doseq [row row-infos]
       (irc/message! row)
-      (db/insert! row))))
+      (db/insert! row)))
+    (Thread/sleep refresh-delay-ms)
+    (recur)))
