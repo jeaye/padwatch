@@ -1,36 +1,9 @@
 # padwatch
 
-FIXME: description
+padwatch is a continuous apartment listing watcher which pulls data from
+Craigslist. It's a weekend hack and it currently supports:
 
-## Installation
-
-Download from http://example.com/FIXME.
-
-## Usage
-
-FIXME: explanation
-
-    $ java -jar padwatch-0.1.0-standalone.jar [args]
-
-## Options
-
-FIXME: listing of options this app accepts.
-
-## Examples
-
-...
-
-### Bugs
-
-...
-
-### Any Other Sections
-### That You Think
-### Might be Useful
-
-## License
-
-Copyright © 2017 FIXME
-
-Distributed under the Eclipse Public License either version 1.0 or (at
-your option) any later version.
+* Continuous scraping of Bay Area listings
+* Walkscore lookup for listings with geotag
+* SQLite3 backend for tracking old listings
+* IRC reporting with tinyurl shortening
