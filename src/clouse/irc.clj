@@ -21,7 +21,8 @@
   (irc/join @connection channel))
 
 (defn shorten-url [url]
-  (slurp (str "http://tinyurl.com/api-create.php?url=" url)))
+  (when url
+    (slurp (str "http://tinyurl.com/api-create.php?url=" url))))
 
 (defn message! [row-info]
   (let [useful {:title (:title row-info) ; TODO: extract helper
