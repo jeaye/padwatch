@@ -22,7 +22,10 @@
 
 (defn shorten-url [url]
   (when url
-    (slurp (str "http://tinyurl.com/api-create.php?url=" url))))
+    (try
+      (slurp (str "http://tinyurl.com/api-create.php?url=" url))
+      (catch Throwable _ ; tinyurl can time out; just skip the shortening
+        url))))
 
 (defn message! [row-info]
   (let [useful {:title (:title row-info) ; TODO: extract helper
