@@ -33,6 +33,8 @@
                    :sort "date"
                    :bundleDuplicates 0})
 
+(def max-rows 5)
+
 (def select-first (comp first select))
 
 (defn fetch-url [url]
@@ -97,14 +99,19 @@
     (assoc row-info
            :tags (flatten useful))))
 
+(defn row-removed? [html-data]
+  (select-first html-data [:span#has_been_removed]))
+
 (defn row-geotag [html-data row-info]
   (if (not (some #{"map"} (:tags row-info)))
     row-info
     (let [map-data (select-first html-data [:div#map])
           lat-long (when map-data
                      (map (:attrs map-data) [:data-latitude :data-longitude]))]
-      (assoc row-info
-             :geotag lat-long))))
+      (if (every? some? lat-long)
+        (assoc row-info
+               :geotag lat-long)
+        row-info))))
 
 (defn row-available-date [html-data row-info]
   (let [available-date (-> (select-first html-data [:span.housing_movein_now])
@@ -145,17 +152,20 @@
 (defn row-info [row-data]
   (let [link-info (row-link row-data {})]
     (when (empty? (db/select {:id (:id link-info)}))
-      (let [basic-extractors [row-post-date row-price row-where row-tags]
+      (let [basic-extractors [row-post-date row-price
+                              row-where row-tags]
             basic-info (reduce #(%2 row-data %1)
                                link-info
                                basic-extractors)
             html-data (fetch-url (:url basic-info))
-            detailed-extractors [row-geotag row-available-date
-                                 row-attributes row-walk-score]
-            detailed-info (reduce #(%2 html-data %1)
-                                  basic-info
-                                  detailed-extractors)]
-        detailed-info))))
+            removed? (row-removed? html-data)]
+        (when-not removed?
+          (let [detailed-extractors [row-geotag row-available-date
+                                     row-attributes row-walk-score]
+                detailed-info (reduce #(%2 html-data %1)
+                                      basic-info
+                                      detailed-extractors)]
+            detailed-info))))))
 
 (defn total-count [html-data]
   (let [count-str  (-> (select-first html-data [:span.totalcount])
@@ -164,4 +174,10 @@
     (Integer/parseInt (or count-str "0"))))
 
 (defn -main [& args]
-  (db/create!))
+  (db/create!)
+  (let [html-data (query query-params)
+        rows (take max-rows (select-rows data))
+        row-infos (filter some? (map row-info rows))]
+    (doseq [row row-infos]
+      (db/insert! row))
+    (pprint row-infos)))
