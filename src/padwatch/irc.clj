@@ -31,6 +31,7 @@
   ; TODO: extract helper
   (let [useful {:where (:where row-info)
                 :style (:style row-info)
+                :price (:price row-info)
                 :sqft (:sqft row-info)
                 :url (-> row-info :url shorten-url)
                 :walkscore (-> (:walkscore row-info)
