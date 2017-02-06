@@ -34,6 +34,7 @@
                    :bathrooms 1
                    :sort "date"
                    :bundleDuplicates 0})
+(def min-walkscore 60)
 
 (def max-rows 20)
 (def refresh-delay-ms (* 1000 60 max-rows)) ; ms -> minutes
@@ -153,10 +154,11 @@
                       (env :walkscore-key))
           walk-data (json/read-str (slurp-url url)
                                    :key-fn keyword)]
-      (assoc row-info
-             :walkscore {:score (:walkscore walk-data)
-                         :description (:description walk-data)
-                         :url (:ws_link walk-data)}))))
+      (when (>= (:walkscore walk-data) min-walkscore)
+        (assoc row-info
+               :walkscore {:score (:walkscore walk-data)
+                           :description (:description walk-data)
+                           :url (:ws_link walk-data)})))))
 
 (defn row-info [row-data]
   (let [link-info (row-link row-data {})]
