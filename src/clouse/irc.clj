@@ -28,11 +28,13 @@
         url))))
 
 (defn message! [row-info]
-  (let [useful {:title (:title row-info) ; TODO: extract helper
-                :where (:where row-info)
+  ; TODO: extract helper
+  (let [useful {:where (:where row-info)
                 :style (:style row-info)
                 :sqft (:sqft row-info)
                 :url (-> row-info :url shorten-url)
-                :walkscore (update (:walkscore row-info)
-                                   :url shorten-url)}]
+                :walkscore (-> (:walkscore row-info)
+                               (update :url shorten-url)
+                               (dissoc :description))
+                }]
     (irc/message @connection channel (pr-str useful))))
