@@ -40,6 +40,12 @@
 (defn fetch-url [url]
   (html-resource (java.net.URL. url)))
 
+(defn slurp-url [url]
+  (try
+    (slurp url)
+    (catch Throwable _
+      "{}")))
+
 (defn query [params]
   (let [param-strings (map #(str (-> % first name) "=" (second %))
                            params)
@@ -133,8 +139,8 @@
            :sqft sqft)))
 
 (defn row-walk-score [html-data row-info]
-  (if-not (or (:geotag row-info)
-              (env :walkscore-key))
+  (if-not (and (:geotag row-info)
+               (env :walkscore-key))
     row-info
     (let [lat-long (:geotag row-info)
           base-url "http://api.walkscore.com/score?format=json&lat=%s&lon=%s&wsapikey=%s"
@@ -142,7 +148,7 @@
                       (first lat-long)
                       (second lat-long)
                       (env :walkscore-key))
-          walk-data (json/read-str (slurp url)
+          walk-data (json/read-str (slurp-url url)
                                    :key-fn keyword)]
       (assoc row-info
              :walkscore {:score (:walkscore walk-data)
@@ -176,7 +182,7 @@
 (defn -main [& args]
   (db/create!)
   (let [html-data (query query-params)
-        rows (take max-rows (select-rows data))
+        rows (take max-rows (select-rows html-data))
         row-infos (filter some? (map row-info rows))]
     (doseq [row row-infos]
       (db/insert! row))
