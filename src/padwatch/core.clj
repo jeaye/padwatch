@@ -190,10 +190,16 @@
   (loop []
     (println "Scraping...")
     (let [html-data (query query-params)
-        rows (take max-rows (select-rows html-data))
-        row-infos (filter some? (map row-info rows))]
-    (doseq [row row-infos]
-      (irc/message! row)
-      (db/insert! row)))
+          full-row-count (total-count html-data)
+          rows (take max-rows (select-rows html-data))
+          used-row-count (count rows)
+          row-infos (filter some? (map row-info rows))]
+      (println (str "Read " full-row-count " rows - using " used-row-count))
+      (doseq [row row-infos]
+        (irc/message-row! row)
+        (db/insert! row))
+      (irc/message! (str "Added " used-row-count " listings; "
+                         "db has " (db/total-count) " total.")))
+    (println "Sleeping...")
     (Thread/sleep refresh-delay-ms)
     (recur)))

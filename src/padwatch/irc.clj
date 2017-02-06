@@ -27,7 +27,10 @@
       (catch Throwable _ ; tinyurl can time out; just skip the shortening
         url))))
 
-(defn message! [row-info]
+(defn message! [msg]
+  (irc/message @connection channel msg))
+
+(defn message-row! [row-info]
   ; TODO: extract helper
   (let [useful {:where (:where row-info)
                 :style (:style row-info)
