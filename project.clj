@@ -1,5 +1,5 @@
 ; TODO: Rename to padwatch
-(defproject clouse "0.1.0-SNAPSHOT"
+(defproject padwatch "0.1.0-SNAPSHOT"
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
@@ -11,6 +11,6 @@
                  [korma "0.4.3"]
                  [org.xerial/sqlite-jdbc "3.7.15-M1"]
                  [irclj "0.5.0-alpha4"]]
-  :main ^:skip-aot clouse.core
+  :main ^:skip-aot padwatch.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})

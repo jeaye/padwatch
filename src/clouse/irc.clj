@@ -1,4 +1,4 @@
-(ns clouse.irc
+(ns padwatch.irc
   (:require [irclj.core :as irc]))
 
 (def nick "padwatch")

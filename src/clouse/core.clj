@@ -1,8 +1,8 @@
-(ns clouse.core
+(ns padwatch.core
   (:gen-class)
   (:require [net.cgrand.enlive-html :refer [html-resource select first-child]]
             [environ.core :refer [env]]
-            [clouse
+            [padwatch
              [db :as db]
              [irc :as irc]]
             [clojure.pprint :refer :all]

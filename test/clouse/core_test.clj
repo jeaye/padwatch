@@ -1,6 +1,6 @@
-(ns clouse.core-test
+(ns padwatch.core-test
   (:require [clojure.test :refer :all]
-            [clouse.core :refer :all]))
+            [padwatch.core :refer :all]))
 
 (deftest a-test
   (testing "FIXME, I fail."

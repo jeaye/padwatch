@@ -1,4 +1,4 @@
-# clouse
+# padwatch
 
 FIXME: description
 
@@ -10,7 +10,7 @@ Download from http://example.com/FIXME.
 
 FIXME: explanation
 
-    $ java -jar clouse-0.1.0-standalone.jar [args]
+    $ java -jar padwatch-0.1.0-standalone.jar [args]
 
 ## Options
 

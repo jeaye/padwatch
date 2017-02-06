@@ -1,4 +1,4 @@
-(ns clouse.db
+(ns padwatch.db
   (:require [korma
              [core :as sql]
              [db :as db]]))
