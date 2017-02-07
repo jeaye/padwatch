@@ -53,7 +53,7 @@
       "{}")))
 
 (defn sleep [ms]
-  (println (str "Sleeping for " ms "ms"))
+  (println (str "sleeping " ms "ms"))
   (Thread/sleep ms))
 
 (defn query [params]
@@ -200,7 +200,7 @@
   (db/create!)
   (irc/connect!)
   (loop []
-    (println "Scraping...")
+    (println "scrape")
     (try
       (let [html-data (query query-params)
             full-row-count (total-count html-data)
