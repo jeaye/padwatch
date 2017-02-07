@@ -42,10 +42,12 @@
 (def select-first (comp first select))
 
 (defn fetch-url [url]
+  (println (str "fetch " url))
   (html-resource (java.net.URL. url)))
 
 (defn slurp-url [url]
   (try
+    (println (str "slurp " url))
     (slurp url)
     (catch Throwable _
       "{}")))
@@ -184,6 +186,14 @@
                        first)]
     (Integer/parseInt (or count-str "0"))))
 
+(defn sleep [ms]
+  (println (str "Sleeping for " ms "ms"))
+  (Thread/sleep ms))
+
+(defn row-sleep [ms row-info]
+  (sleep ms)
+  row-info)
+
 (defn -main [& args]
   (db/create!)
   (irc/connect!)
@@ -193,13 +203,17 @@
           full-row-count (total-count html-data)
           rows (take max-rows (select-rows html-data))
           used-row-count (count rows)
-          row-infos (filter some? (map row-info rows))]
+          ; Take half as long as the refresh delay to pull all rows
+          row-sleep-ms (/ (/ refresh-delay-ms 2) used-row-count)
+          row-infos (->> (map (comp (partial row-sleep row-sleep-ms)
+                                    row-info)
+                              rows)
+                         (filter some?))]
       (println (str "Read " full-row-count " rows - using " used-row-count))
       (doseq [row row-infos]
         (irc/message-row! row)
         (db/insert! row))
       (irc/message! (str "Added " used-row-count " listings; "
                          "db has " (db/total-count) " total.")))
-    (println "Sleeping...")
-    (Thread/sleep refresh-delay-ms)
+    (sleep refresh-delay-ms)
     (recur)))
