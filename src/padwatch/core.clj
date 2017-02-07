@@ -36,7 +36,7 @@
                    :bundleDuplicates 0})
 (def min-walkscore 60)
 
-(def max-rows 5)
+(def max-rows 20)
 (def refresh-delay-ms (* 1000 60 max-rows)) ; ms -> minutes
 
 (def select-first (comp first select))
