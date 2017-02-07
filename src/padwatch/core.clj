@@ -199,7 +199,8 @@
   (irc/connect!)
   (loop []
     (println "Scraping...")
-    (let [html-data (query query-params)
+    (try
+      (let [html-data (query query-params)
           full-row-count (total-count html-data)
           rows (take max-rows (select-rows html-data))
           used-row-count (count rows)
@@ -216,5 +217,7 @@
         (db/insert! row))
       (irc/message! (str "Added " used-row-count " listings; "
                          "db has " (db/total-count) " total.")))
+      (catch Throwable t ; Just keep trying
+        (println t)))
     (sleep refresh-delay-ms)
     (recur)))
