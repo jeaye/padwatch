@@ -210,7 +210,7 @@
             row-sleep-ms (/ (/ refresh-delay-ms 2) used-row-count)
             row-infos (->> (mapv (partial row-info row-sleep-ms) rows)
                            (filter some?))]
-        (irc/message! (str "Added " used-row-count " listings; "
+        (irc/message! (str "Added " (count row-infos) " listings; "
                            "db has " (db/total-count) " total.")))
       (catch Throwable t ; Just keep trying
         (println t)))
