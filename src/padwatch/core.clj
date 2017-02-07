@@ -205,6 +205,7 @@
           used-row-count (count rows)
           ; Take half as long as the refresh delay to pull all rows
           row-sleep-ms (/ (/ refresh-delay-ms 2) used-row-count)
+          ; TODO: Read basic info first, then filter, then sleep while reading detailed
           row-infos (->> (map (comp (partial row-sleep row-sleep-ms)
                                     row-info)
                               rows)
