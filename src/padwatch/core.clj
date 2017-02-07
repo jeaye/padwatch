@@ -36,7 +36,7 @@
                    :bundleDuplicates 0})
 (def min-walkscore 60)
 
-(def max-rows 20)
+(def max-rows 5)
 (def refresh-delay-ms (* 1000 60 max-rows)) ; ms -> minutes
 
 (def select-first (comp first select))
@@ -51,6 +51,10 @@
     (slurp url)
     (catch Throwable _
       "{}")))
+
+(defn sleep [ms]
+  (println (str "Sleeping for " ms "ms"))
+  (Thread/sleep ms))
 
 (defn query [params]
   (let [param-strings (map #(str (-> % first name) "=" (second %))
@@ -162,7 +166,7 @@
                            :description (:description walk-data)
                            :url (:ws_link walk-data)})))))
 
-(defn row-info [row-data]
+(defn row-info [sleep-ms row-data]
   (let [link-info (row-link row-data {})]
     (when (empty (db/select {:id (:id link-info)}))
       (let [basic-extractors [row-post-date row-price
@@ -178,6 +182,9 @@
                 detailed-info (reduce #(%2 html-data %1)
                                       basic-info
                                       detailed-extractors)]
+            (irc/message-row! detailed-info)
+            (db/insert! detailed-info)
+            (sleep sleep-ms)
             detailed-info))))))
 
 (defn total-count [html-data]
@@ -186,14 +193,6 @@
                        first)]
     (Integer/parseInt (or count-str "0"))))
 
-(defn sleep [ms]
-  (println (str "Sleeping for " ms "ms"))
-  (Thread/sleep ms))
-
-(defn row-sleep [ms row-info]
-  (sleep ms)
-  row-info)
-
 (defn -main [& args]
   (db/create!)
   (irc/connect!)
@@ -201,22 +200,15 @@
     (println "Scraping...")
     (try
       (let [html-data (query query-params)
-          full-row-count (total-count html-data)
-          rows (take max-rows (select-rows html-data))
-          used-row-count (count rows)
-          ; Take half as long as the refresh delay to pull all rows
-          row-sleep-ms (/ (/ refresh-delay-ms 2) used-row-count)
-          ; TODO: Read basic info first, then filter, then sleep while reading detailed
-          row-infos (->> (map (comp (partial row-sleep row-sleep-ms)
-                                    row-info)
-                              rows)
-                         (filter some?))]
-      (println (str "Read " full-row-count " rows - using " used-row-count))
-      (doseq [row row-infos]
-        (irc/message-row! row)
-        (db/insert! row))
-      (irc/message! (str "Added " used-row-count " listings; "
-                         "db has " (db/total-count) " total.")))
+            full-row-count (total-count html-data)
+            rows (take max-rows (select-rows html-data))
+            used-row-count (count rows)
+            ; Take half as long as the refresh delay to pull all rows
+            row-sleep-ms (/ (/ refresh-delay-ms 2) used-row-count)
+            row-infos (->> (map (partial row-info row-sleep-ms) rows)
+                           (filter some?))]
+        (irc/message! (str "Added " used-row-count " listings; "
+                           "db has " (db/total-count) " total.")))
       (catch Throwable t ; Just keep trying
         (println t)))
     (sleep refresh-delay-ms)
