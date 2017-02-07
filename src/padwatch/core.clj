@@ -205,7 +205,7 @@
             used-row-count (count rows)
             ; Take half as long as the refresh delay to pull all rows
             row-sleep-ms (/ (/ refresh-delay-ms 2) used-row-count)
-            row-infos (->> (map (partial row-info row-sleep-ms) rows)
+            row-infos (->> (mapv (partial row-info row-sleep-ms) rows)
                            (filter some?))]
         (irc/message! (str "Added " used-row-count " listings; "
                            "db has " (db/total-count) " total.")))
