@@ -174,6 +174,7 @@
             basic-info (reduce #(%2 row-data %1)
                                link-info
                                basic-extractors)
+            _ (pprint basic-info)
             html-data (fetch-url (:url basic-info))
             removed? (row-removed? html-data)]
         (when-not removed?
@@ -182,10 +183,12 @@
                 detailed-info (reduce #(%2 html-data %1)
                                       basic-info
                                       detailed-extractors)]
-            (irc/message-row! detailed-info)
-            (db/insert! detailed-info)
-            (sleep sleep-ms)
-            detailed-info))))))
+            (when detailed-info
+              (pprint detailed-info)
+              (irc/message-row! detailed-info)
+              (db/insert! detailed-info)
+              (sleep sleep-ms)
+              detailed-info)))))))
 
 (defn total-count [html-data]
   (let [count-str  (-> (select-first html-data [:span.totalcount])
