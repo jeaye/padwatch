@@ -142,4 +142,4 @@
         row-sleep-ms (/ (/ refresh-delay-ms 2) used-row-count)
         row-infos (->> (mapv (partial row-info row-sleep-ms) rows)
                        (filter some?))]
-    ))
+    row-infos))
