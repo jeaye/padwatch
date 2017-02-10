@@ -7,7 +7,7 @@
             [net.cgrand.enlive-html :refer [select]]
             [clojure.data.json :as json]))
 
-; TODO: post date, available date, title, source, walkscore
+; TODO: post date, available date, source, walkscore
 
 (def source-config (get-in config/data [:source :zillow]))
 
@@ -49,6 +49,10 @@
 (defn row-where [html-data row]
   (let [addr (util/select-first html-data [:span.zsg-photo-card-address])]
     (assoc row :where (-> addr :content first))))
+
+(defn row-title [html-data row]
+  ; Zillow doesn't have good titles; use the address
+  (assoc row :title (:where row)))
 
 (defn run []
   ; TODO: Have multiple zones
