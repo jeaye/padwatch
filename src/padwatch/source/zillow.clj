@@ -7,6 +7,8 @@
             [net.cgrand.enlive-html :refer [select]]
             [clojure.data.json :as json]))
 
+; TODO: id, where, post date, available date, title, source, walkscore
+
 (def source-config (get-in config/data [:source :zillow]))
 
 (def base-url "http://www.zillow.com")

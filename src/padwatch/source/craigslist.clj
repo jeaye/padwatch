@@ -33,7 +33,6 @@
         id (-> link :attrs :data-id)
         content (-> link :content first)]
   (assoc row
-         :source "craigslist"
          :id id
          :title content
          :url url)))
@@ -104,7 +103,7 @@
            :sqft sqft)))
 
 (defn row-info [sleep-ms row-data]
-  (let [link-info (row-link row-data {})]
+  (let [link-info (row-link row-data {:source "craigslist"})]
     (when (empty (db/select {:id (:id link-info)}))
       (let [basic-extractors [row-post-date row-price
                               row-where row-tags]
