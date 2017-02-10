@@ -18,6 +18,10 @@
   (-> (util/select-first html-data [:ul.photo-cards])
       :content))
 
+(defn row-id [html-data row]
+  (let [id (-> html-data :content first :attrs :data-zpid)]
+    (assoc row :id (format "%s-%s" (:source row) id))))
+
 (defn row-url [html-data row]
   (let [anchor (util/select-first html-data [:a.zsg-photo-card-overlay-link])
         href (-> anchor :attrs :href)]
