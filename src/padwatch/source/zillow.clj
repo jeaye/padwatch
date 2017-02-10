@@ -21,6 +21,14 @@
         href (-> anchor :attrs :href)]
     (assoc row :url (str base-url href))))
 
+(defn row-geo [html-data row]
+  (let [matches (rest (re-matches #".*/(-?\d+\.\d+),(-?\d+\.\d+)_.*" (:url row)))
+        latitude (first matches)
+        longitude (second matches)]
+    (if (and latitude longitude)
+      (assoc row :geo (map #(Float/parseFloat %) [latitude longitude]))
+      row)))
+
 (defn row-style [html-data row]
   (let [bubble (util/select-first html-data [:div.minibubble])
         bubble-json (-> bubble :content first :data
