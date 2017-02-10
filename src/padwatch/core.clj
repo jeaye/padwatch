@@ -5,7 +5,9 @@
              [db :as db]
              [config :as config]
              [util :as util]]
-            [padwatch.source.craigslist :as craigslist]
+            [padwatch.source
+             [craigslist :as craigslist]
+             [zillow :as zillow]]
             [clojure.pprint :refer :all]))
 
 ; TODO:

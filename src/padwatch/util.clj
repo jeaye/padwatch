@@ -1,6 +1,5 @@
 (ns padwatch.util
-  (:require [net.cgrand.enlive-html :refer [html-resource select]]
-            [clojure.data.json :as json]))
+  (:require [net.cgrand.enlive-html :refer [html-resource select]]))
 
 (def select-first (comp first select))
 
