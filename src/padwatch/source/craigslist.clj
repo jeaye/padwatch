@@ -33,7 +33,7 @@
         id (-> link :attrs :data-id)
         content (-> link :content first)]
   (assoc row
-         :id id
+         :id (format "%s-%s" (:source row) id)
          :title content
          :url url)))
 
