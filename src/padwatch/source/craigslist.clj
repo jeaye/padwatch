@@ -27,71 +27,71 @@
 (defn select-rows [html-data]
   (select html-data [:p.result-info]))
 
-(defn row-link [row-data row-info]
+(defn row-link [row-data row]
   (let [link (util/select-first row-data [:a.hdrlnk])
         url (str (:base-url source-config) (-> link :attrs :href))
         id (-> link :attrs :data-id)
         content (-> link :content first)]
-  (assoc row-info
+  (assoc row
          :source "craigslist"
          :id id
          :title content
          :url url)))
 
-(defn row-post-date [row-data row-info]
+(defn row-post-date [row-data row]
   (let [post-date (-> (util/select-first row-data [:time]) :attrs :datetime)]
-    (assoc row-info
+    (assoc row
            :post-date post-date)))
 
-(defn row-price [row-data row-info]
+(defn row-price [row-data row]
   (let [price-str (-> (util/select-first row-data [:span.result-price])
                       :content
                       first)
         valid? (re-matches #"\$\d+" (or price-str ""))
         price (when valid?
                 (Integer/parseInt (subs price-str 1)))]
-    (assoc row-info
+    (assoc row
            :price price)))
 
-(defn row-where [row-data row-info]
+(defn row-where [row-data row]
   (let [where (-> (util/select-first row-data [:span.result-hood]) :content first)
         trimmed (->> (or where "")
                      clojure.string/trim
                      (drop 1)
                      butlast
                      (apply str))]
-    (assoc row-info
+    (assoc row
            :where trimmed)))
 
-(defn row-tags [row-data row-info]
+(defn row-tags [row-data row]
   (let [tags (-> (util/select-first row-data [:span.result-tags]) :content)
         cleaned (map clean-tags tags)
         useful (filter not-empty cleaned)]
-    (assoc row-info
+    (assoc row
            :tags (flatten useful))))
 
 (defn row-removed? [html-data]
   (util/select-first html-data [:span#has_been_removed]))
 
-(defn row-geotag [html-data row-info]
-  (if (not (some #{"map"} (:tags row-info)))
-    row-info
+(defn row-geotag [html-data row]
+  (if (not (some #{"map"} (:tags row)))
+    row
     (let [map-data (util/select-first html-data [:div#map])
           lat-long (when map-data
                      (map (:attrs map-data) [:data-latitude :data-longitude]))]
       (if (every? some? lat-long)
-        (assoc row-info
+        (assoc row
                :geotag lat-long)
-        row-info))))
+        row))))
 
-(defn row-available-date [html-data row-info]
+(defn row-available-date [html-data row]
   (let [available-date (-> (util/select-first html-data [:span.housing_movein_now])
                            :attrs
                            :data-date)]
-    (assoc row-info
+    (assoc row
            :available-date available-date)))
 
-(defn row-attributes [html-data row-info]
+(defn row-attributes [html-data row]
   (let [content (-> (util/select-first html-data [:p.attrgroup]) :content)
         cleaned (postwalk clean-tags content)
         useful (filter not-empty cleaned)
@@ -99,7 +99,7 @@
         sqft-match (re-matches #"(\d+)ft2" (or sqft-str ""))
         sqft (when sqft-match
                (Integer/parseInt (second sqft-match)))]
-    (assoc row-info
+    (assoc row
            :style (first useful)
            :sqft sqft)))
 
