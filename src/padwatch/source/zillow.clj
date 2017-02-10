@@ -7,7 +7,7 @@
             [net.cgrand.enlive-html :refer [select]]
             [clojure.data.json :as json]))
 
-; TODO: id, where, post date, available date, title, source, walkscore
+; TODO: post date, available date, title, source, walkscore
 
 (def source-config (get-in config/data [:source :zillow]))
 
@@ -45,6 +45,10 @@
                           (:bath bubble-json))
            :price (:minPrice bubble-json)
            :sqft (:sqft bubble-json))))
+
+(defn row-where [html-data row]
+  (let [addr (util/select-first html-data [:span.zsg-photo-card-address])]
+    (assoc row :where (-> addr :content first))))
 
 (defn run []
   ; TODO: Have multiple zones
