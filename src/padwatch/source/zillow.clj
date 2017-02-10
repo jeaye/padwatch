@@ -9,22 +9,30 @@
 
 (def source-config (get-in config/data [:source :zillow]))
 
-(def url "http://www.zillow.com/burlingame-ca/apartments/")
+(def base-url "http://www.zillow.com")
+(def zone-url (str base-url "/burlingame-ca/apartments"))
 
 (defn rows [html-data]
   (-> (util/select-first html-data [:ul.photo-cards])
       :content))
 
-(defn row-info [row-data]
-  (let [bubble (util/select-first row-data [:div.minibubble])
+(defn row-url [html-data row]
+  (let [anchor (util/select-first html-data [:a.zsg-photo-card-overlay-link])
+        href (-> anchor :attrs :href)]
+    (assoc row :url (str base-url href))))
+
+(defn row-style [html-data row]
+  (let [bubble (util/select-first html-data [:div.minibubble])
         bubble-json (-> bubble :content first :data
                         (json/read-str :key-fn keyword))]
-      {:style (format "%dBR/%.1fBa"
-                      (:bed bubble-json)
-                      (:bath bubble-json))
-       :price (:minPrice bubble-json)
-       :sqft (:sqft bubble-json)}))
+    (assoc row
+           :style (format "%dBR/%.1fBa"
+                          (:bed bubble-json)
+                          (:bath bubble-json))
+           :price (:minPrice bubble-json)
+           :sqft (:sqft bubble-json))))
 
 (defn run []
-  (let [html-data (util/fetch-url url)]
+  ; TODO: Have multiple zones
+  (let [html-data (util/fetch-url zone-url)]
     ))
