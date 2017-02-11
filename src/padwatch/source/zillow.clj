@@ -2,6 +2,7 @@
   (:require [padwatch
              [config :as config]
              [db :as db]
+             [irc :as irc] ; TODO: remove
              [util :as util]]
             [padwatch.source.walkscore :refer [row-walkscore]]
             [net.cgrand.enlive-html :refer [select]]
@@ -37,14 +38,15 @@
 
 (defn row-style [html-data row]
   (let [bubble (util/select-first html-data [:div.minibubble])
-        bubble-json (-> bubble :content first :data
-                        (json/read-str :key-fn keyword))]
-    (assoc row
-           :style (format "%dBR/%.1fBa"
-                          (:bed bubble-json)
-                          (:bath bubble-json))
-           :price (:minPrice bubble-json)
-           :sqft (:sqft bubble-json))))
+        bubble-data (-> bubble :content first :data)
+        bubble-json (json/read-str (or bubble-data "{}") :key-fn keyword)]
+    (when (not-empty bubble-json)
+      (assoc row
+             :style (format "%dBR/%.1fBa"
+                            (:bed bubble-json)
+                            (:bath bubble-json))
+             :price (:minPrice bubble-json)
+             :sqft (:sqft bubble-json)))))
 
 (defn row-where [html-data row]
   (let [addr (util/select-first html-data [:span.zsg-photo-card-address])]
@@ -58,11 +60,29 @@
   (let [node (util/select-first html-data [:span.zsg-photo-card-notification])
         updated (-> node :content first)]
     (assoc row
-           :post-data updated
+           :post-date updated
            ; Zillow doesn't have this
            :available-date "N/A")))
 
+(defn row-info [row-data]
+  (let [row (row-id row-data {:source "zillow"})]
+    (when (empty (db/select {:id (:id row)}))
+      (let [extractors [row-url row-geo
+                        row-style row-where
+                        row-title row-dates row-walkscore]
+            final-row (reduce #(when %1
+                                 (%2 row-data %1))
+                              row
+                              extractors)]
+        (when final-row
+          ; TODO: (backend/record! detailed-info)
+          ;(irc/message-row! final-row)
+          ;(db/insert! final-row)
+          final-row)))))
+
 (defn run []
   ; TODO: Have multiple zones
-  (let [html-data (util/fetch-url zone-url)]
-    ))
+  (let [html-data (util/fetch-url zone-url)
+        row-data (rows html-data)
+        row-infos (filter some? (mapv row-info row-data))]
+    row-infos))

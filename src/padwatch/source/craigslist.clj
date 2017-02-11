@@ -107,7 +107,8 @@
     (when (empty (db/select {:id (:id link-info)}))
       (let [basic-extractors [row-post-date row-price
                               row-where row-tags]
-            basic-info (reduce #(%2 row-data %1)
+            basic-info (reduce #(when %1
+                                 (%2 row-data %1))
                                link-info
                                basic-extractors)
             html-data (util/fetch-url (:url basic-info))
@@ -115,7 +116,8 @@
         (when-not removed?
           (let [detailed-extractors [row-geotag row-available-date
                                      row-attributes row-walkscore]
-                detailed-info (reduce #(%2 html-data %1)
+                detailed-info (reduce #(when %1
+                                         (%2 html-data %1))
                                       basic-info
                                       detailed-extractors)]
             (when detailed-info
