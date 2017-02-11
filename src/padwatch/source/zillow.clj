@@ -72,6 +72,7 @@
                               extractors)]
         (when final-row
           (backend/record! final-row)
+          ; TODO: Have a sleep here
           final-row)))))
 
 (defn run []
