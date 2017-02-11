@@ -8,7 +8,7 @@
             [net.cgrand.enlive-html :refer [select]]
             [clojure.data.json :as json]))
 
-; TODO: source, walkscore
+; TODO: reliable geo, better dates
 
 (def source-config (get-in config/data [:source :zillow]))
 
@@ -59,10 +59,13 @@
 (defn row-dates [html-data row]
   (let [node (util/select-first html-data [:span.zsg-photo-card-notification])
         updated (-> node :content first)]
-    (assoc row
-           :post-date updated
-           ; Zillow doesn't have this
-           :available-date "N/A")))
+    ; Will be "Updated today/yesterday" or a map with the number of days. Ignore
+    ; anything that old.
+    (when (string? updated)
+      (assoc row
+             :post-date updated
+             ; Zillow doesn't have this
+             :available-date "N/A"))))
 
 (defn row-info [row-data]
   (let [row (row-id row-data {:source "zillow"})]
