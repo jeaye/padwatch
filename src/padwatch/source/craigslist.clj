@@ -113,7 +113,8 @@
                                basic-extractors)
             html-data (util/fetch-url (:url basic-info))
             removed? (row-removed? html-data)]
-        (when-not removed?
+        (if removed?
+          (util/sleep source-config sleep-ms)
           (let [detailed-extractors [row-geo row-available-date
                                      row-attributes row-walkscore]
                 detailed-info (reduce #(when %1
