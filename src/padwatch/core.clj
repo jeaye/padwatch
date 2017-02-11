@@ -8,7 +8,7 @@
             [padwatch.source
              [craigslist :as craigslist]
              [zillow :as zillow]]
-            [clojure.pprint :refer :all]))
+            [clojure.pprint :refer [pprint]]))
 
 ; TODO:
 ; - amenities
@@ -27,6 +27,4 @@
                            "db has " (db/total-count) " total.")))
       (catch Throwable t ; Just keep trying
         (println t)))
-    ; TODO: Each source should run on its own thread with its own sleeps
-    (util/sleep 5000)
     (recur)))
