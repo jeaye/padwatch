@@ -10,8 +10,6 @@
             [net.cgrand.enlive-html :refer [select]]
             [clojure.data.json :as json]))
 
-; TODO: reliable geo
-
 (def source-config (get-in config/data [:source :zillow]))
 
 (def base-url "http://www.zillow.com")
