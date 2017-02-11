@@ -8,12 +8,10 @@
              [walkscore :refer [row-walkscore]]
              [census-geo :refer [row-census-geo]]]
             [net.cgrand.enlive-html :refer [select]]
+            [clojure.pprint :refer [pprint]]
             [clojure.data.json :as json]))
 
 (def source-config (get-in config/data [:source :zillow]))
-
-(def base-url "http://www.zillow.com")
-(def zone-url (str base-url "/burlingame-ca/apartments"))
 
 (defn rows [html-data]
   (-> (util/select-first html-data [:ul.photo-cards])
@@ -26,7 +24,7 @@
 (defn row-url [html-data row]
   (let [anchor (util/select-first html-data [:a.zsg-photo-card-overlay-link])
         href (-> anchor :attrs :href)]
-    (assoc row :url (str base-url href))))
+    (assoc row :url (str (:base-url source-config) href))))
 
 (defn row-style [html-data row]
   (let [bubble (util/select-first html-data [:div.minibubble])
@@ -59,9 +57,9 @@
              ; Zillow doesn't have this
              :available-date "N/A"))))
 
-(defn row-info [row-data]
+(defn row-info [row-length-ms row-data]
   (let [row (row-id row-data {:source "zillow"})]
-    (when (empty (db/select {:id (:id row)}))
+    (when (or true (db/select {:id (:id row)}))
       (let [extractors [row-url
                         row-style row-where
                         row-title row-dates
@@ -72,12 +70,24 @@
                               extractors)]
         (when final-row
           (backend/record! final-row)
-          ; TODO: Have a sleep here
+          (util/sleep row-length-ms)
           final-row)))))
 
 (defn run []
-  ; TODO: Have multiple zones
-  (let [html-data (util/fetch-url zone-url)
-        row-data (rows html-data)
-        row-infos (filter some? (mapv row-info row-data))]
-    row-infos))
+  (let [zones (:zones source-config)
+        cycle-length-ms (:cycle-length-ms source-config)
+        ; Take half as long as the cycle length to pull all rows
+        zone-length-ms (/ (/ cycle-length-ms 2) (max (count zones) 1))]
+    (doseq [zone zones]
+      (let [zone-url (format "%s/%s/apartments" (:base-url source-config) zone)
+            html-data (util/fetch-url zone-url)
+            row-data (rows html-data)
+            row-length-ms (/ zone-length-ms (max (count row-data) 1))
+            row-infos (->> (mapv (partial row-info row-length-ms) row-data)
+                           (filter some?))]
+        (when (zero? (count row-infos))
+          (util/sleep zone-length-ms))
+        row-infos))
+    (util/sleep (if (zero? (count zones))
+                  cycle-length-ms
+                  (/ cycle-length-ms 2)))))
