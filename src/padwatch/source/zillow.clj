@@ -7,7 +7,7 @@
             [net.cgrand.enlive-html :refer [select]]
             [clojure.data.json :as json]))
 
-; TODO: post date, available date, source, walkscore
+; TODO: source, walkscore
 
 (def source-config (get-in config/data [:source :zillow]))
 
@@ -53,6 +53,14 @@
 (defn row-title [html-data row]
   ; Zillow doesn't have good titles; use the address
   (assoc row :title (:where row)))
+
+(defn row-dates [html-data row]
+  (let [node (util/select-first html-data [:span.zsg-photo-card-notification])
+        updated (-> node :content first)]
+    (assoc row
+           :post-data updated
+           ; Zillow doesn't have this
+           :available-date "N/A")))
 
 (defn run []
   ; TODO: Have multiple zones
