@@ -4,5 +4,5 @@
              [irc :as irc]]))
 
 (defn record! [row]
-  (irc/message-row! final-row)
-  (db/insert! final-row))
+  (irc/message-row! row)
+  (db/insert! row))

@@ -71,7 +71,7 @@
                               row
                               extractors)]
         (when final-row
-          (backend/record! detailed-info)
+          (backend/record! final-row)
           final-row)))))
 
 (defn run []
