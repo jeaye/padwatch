@@ -2,7 +2,7 @@
   (:require [padwatch
              [config :as config]
              [db :as db]
-             [irc :as irc] ; TODO: remove
+             [backend :as backend]
              [util :as util]]
             [padwatch.source.walkscore :refer [row-walkscore]]
             [net.cgrand.enlive-html :refer [select]]
@@ -121,9 +121,7 @@
                                       basic-info
                                       detailed-extractors)]
             (when detailed-info
-              ; TODO: (backend/record! detailed-info)
-              (irc/message-row! detailed-info)
-              (db/insert! detailed-info)
+              (backend/record! detailed-info)
               (util/sleep sleep-ms)
               detailed-info)))))))
 

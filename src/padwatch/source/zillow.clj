@@ -2,7 +2,7 @@
   (:require [padwatch
              [config :as config]
              [db :as db]
-             [irc :as irc] ; TODO: remove
+             [backend :as backend]
              [util :as util]]
             [padwatch.source
              [walkscore :refer [row-walkscore]]
@@ -71,9 +71,7 @@
                               row
                               extractors)]
         (when final-row
-          ; TODO: (backend/record! detailed-info)
-          ;(irc/message-row! final-row)
-          ;(db/insert! final-row)
+          (backend/record! detailed-info)
           final-row)))))
 
 (defn run []
