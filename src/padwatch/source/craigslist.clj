@@ -132,13 +132,13 @@
     (Integer/parseInt (or count-str "0"))))
 
 (defn run []
-  (let [refresh-delay-ms (:refresh-delay-ms source-config)
+  (let [cycle-length-ms (:cycle-length-ms source-config)
         html-data (query (:params source-config))
         full-row-count (total-count html-data)
         rows (take (:max-rows source-config) (select-rows html-data))
         used-row-count (count rows)
-        ; Take half as long as the refresh delay to pull all rows
-        row-sleep-ms (/ (/ refresh-delay-ms 2) used-row-count)
+        ; Take half as long as the cycle length to pull all rows
+        row-sleep-ms (/ (/ cycle-length-ms 2) used-row-count)
         row-infos (->> (mapv (partial row-info row-sleep-ms) rows)
                        (filter some?))]
     row-infos))
