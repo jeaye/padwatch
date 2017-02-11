@@ -122,7 +122,7 @@
                                       detailed-extractors)]
             (when detailed-info
               (backend/record! detailed-info)
-              (util/sleep sleep-ms)
+              (util/sleep source-config sleep-ms)
               detailed-info)))))))
 
 (defn total-count [html-data]
@@ -132,16 +132,21 @@
     (Integer/parseInt (or count-str "0"))))
 
 (defn run []
-  (let [cycle-length-ms (:cycle-length-ms source-config)
-        html-data (query (:params source-config))
-        full-row-count (total-count html-data)
-        rows (take (:max-rows source-config) (select-rows html-data))
-        used-row-count (max (count rows) 1) ; Avoid n/0
-        ; Take half as long as the cycle length to pull all rows
-        row-sleep-ms (/ (/ cycle-length-ms 2) used-row-count)
-        row-infos (->> (mapv (partial row-info row-sleep-ms) rows)
-                       (filter some?))]
-    (util/sleep (if (zero? (count row-infos))
-                  cycle-length-ms
-                  (/ cycle-length-ms 2)))
-    row-infos))
+  (loop []
+    (try
+      (let [cycle-length-ms (:cycle-length-ms source-config)
+            html-data (query (:params source-config))
+            full-row-count (total-count html-data)
+            rows (take (:max-rows source-config) (select-rows html-data))
+            used-row-count (max (count rows) 1) ; Avoid n/0
+            ; Take half as long as the cycle length to pull all rows
+            row-sleep-ms (/ (/ cycle-length-ms 2) used-row-count)
+            row-infos (->> (mapv (partial row-info row-sleep-ms) rows)
+                           (filter some?))]
+        (util/sleep source-config
+                    (if (zero? (count row-infos))
+                      cycle-length-ms
+                      (/ cycle-length-ms 2))))
+      (catch Throwable t
+        (println t)))
+    (recur)))

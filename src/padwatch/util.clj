@@ -14,6 +14,6 @@
     (catch Throwable _
       "{}")))
 
-(defn sleep [ms]
-  (println (str "sleep " ms "ms"))
+(defn sleep [config ms]
+  (println (format "[%s] sleep %sms" (:source config) ms))
   (Thread/sleep ms))
