@@ -72,7 +72,7 @@
 (defn row-removed? [html-data]
   (util/select-first html-data [:span#has_been_removed]))
 
-(defn row-geotag [html-data row]
+(defn row-geo [html-data row]
   (if (not (some #{"map"} (:tags row)))
     row
     (let [map-data (util/select-first html-data [:div#map])
@@ -80,7 +80,7 @@
                      (map (:attrs map-data) [:data-latitude :data-longitude]))]
       (if (every? some? lat-long)
         (assoc row
-               :geotag lat-long)
+               :geo lat-long)
         row))))
 
 (defn row-available-date [html-data row]
@@ -114,7 +114,7 @@
             html-data (util/fetch-url (:url basic-info))
             removed? (row-removed? html-data)]
         (when-not removed?
-          (let [detailed-extractors [row-geotag row-available-date
+          (let [detailed-extractors [row-geo row-available-date
                                      row-attributes row-walkscore]
                 detailed-info (reduce #(when %1
                                          (%2 html-data %1))

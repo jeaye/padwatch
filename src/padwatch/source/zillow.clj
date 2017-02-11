@@ -4,11 +4,13 @@
              [db :as db]
              [irc :as irc] ; TODO: remove
              [util :as util]]
-            [padwatch.source.walkscore :refer [row-walkscore]]
+            [padwatch.source
+             [walkscore :refer [row-walkscore]]
+             [census-geo :refer [row-census-geo]]]
             [net.cgrand.enlive-html :refer [select]]
             [clojure.data.json :as json]))
 
-; TODO: reliable geo, better dates
+; TODO: reliable geo
 
 (def source-config (get-in config/data [:source :zillow]))
 
@@ -27,14 +29,6 @@
   (let [anchor (util/select-first html-data [:a.zsg-photo-card-overlay-link])
         href (-> anchor :attrs :href)]
     (assoc row :url (str base-url href))))
-
-(defn row-geo [html-data row]
-  (let [matches (rest (re-matches #".*/(-?\d+\.\d+),(-?\d+\.\d+)_.*" (:url row)))
-        latitude (first matches)
-        longitude (second matches)]
-    (if (and latitude longitude)
-      (assoc row :geo (map #(Float/parseFloat %) [latitude longitude]))
-      row)))
 
 (defn row-style [html-data row]
   (let [bubble (util/select-first html-data [:div.minibubble])
@@ -70,9 +64,10 @@
 (defn row-info [row-data]
   (let [row (row-id row-data {:source "zillow"})]
     (when (empty (db/select {:id (:id row)}))
-      (let [extractors [row-url row-geo
+      (let [extractors [row-url
                         row-style row-where
-                        row-title row-dates row-walkscore]
+                        row-title row-dates
+                        row-census-geo row-walkscore]
             final-row (reduce #(when %1
                                  (%2 row-data %1))
                               row
