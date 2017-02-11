@@ -59,7 +59,7 @@
 
 (defn row-info [row-length-ms row-data]
   (let [row (row-id row-data {:source "zillow"})]
-    (when (or true (db/select {:id (:id row)}))
+    (when (empty (db/select {:id (:id row)}))
       (let [extractors [row-url
                         row-style row-where
                         row-title row-dates
