@@ -34,7 +34,3 @@
 
 (defn select [where]
   (sql/select listings (sql/where where)))
-
-(defn total-count []
-  ; TODO: optimize
-  (count (sql/select listings (sql/where {}))))

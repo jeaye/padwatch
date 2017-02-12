@@ -78,7 +78,6 @@
 (defn run []
   (loop []
     (try
-      ; TODO: More zones
       (let [zones (:zones source-config)
             cycle-length-ms (:cycle-length-ms source-config)
             ; Take half as long as the cycle length to pull all rows
