@@ -6,7 +6,8 @@
              [util :as util]]
             [padwatch.source
              [walkscore :refer [row-walkscore]]
-             [census-geo :refer [row-census-geo]]]
+             [census-geo :refer [row-census-geo]]
+             [filter :refer [row-filter]]]
             [net.cgrand.enlive-html :refer [select]]
             [clojure.pprint :refer [pprint]]
             [clojure.data.json :as json]))
@@ -63,19 +64,21 @@
       (let [extractors [row-url
                         row-style row-where
                         row-title row-dates
-                        row-census-geo row-walkscore]
+                        row-census-geo row-walkscore
+                        row-filter]
             final-row (reduce #(when %1
                                  (%2 row-data %1))
                               row
                               extractors)]
         (when final-row
-          (backend/record! final-row)
-          (util/sleep source-config row-length-ms)
-          final-row)))))
+          (backend/record! final-row))
+        (util/sleep source-config row-length-ms)
+        final-row))))
 
 (defn run []
   (loop []
     (try
+      ; TODO: More zones
       (let [zones (:zones source-config)
             cycle-length-ms (:cycle-length-ms source-config)
             ; Take half as long as the cycle length to pull all rows
@@ -87,7 +90,7 @@
                 row-length-ms (/ zone-length-ms (max (count row-data) 1))
                 row-infos (->> (mapv (partial row-info row-length-ms) row-data)
                                (filter some?))]
-            (when (zero? (count row-infos))
+            (when (zero? (count row-data))
               (util/sleep source-config zone-length-ms))))
         (util/sleep source-config
                     (if (zero? (count zones))

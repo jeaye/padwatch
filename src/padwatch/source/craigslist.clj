@@ -4,7 +4,9 @@
              [db :as db]
              [backend :as backend]
              [util :as util]]
-            [padwatch.source.walkscore :refer [row-walkscore]]
+            [padwatch.source
+             [walkscore :refer [row-walkscore]]
+             [filter :refer [row-filter]]]
             [net.cgrand.enlive-html :refer [select]]
             [clojure.walk :refer [postwalk]]))
 
@@ -108,7 +110,7 @@
       (let [basic-extractors [row-post-date row-price
                               row-where row-tags]
             basic-info (reduce #(when %1
-                                 (%2 row-data %1))
+                                  (%2 row-data %1))
                                link-info
                                basic-extractors)
             html-data (util/fetch-url (:url basic-info))
@@ -116,15 +118,16 @@
         (if removed?
           (util/sleep source-config sleep-ms)
           (let [detailed-extractors [row-geo row-available-date
-                                     row-attributes row-walkscore]
+                                     row-attributes row-walkscore
+                                     row-filter]
                 detailed-info (reduce #(when %1
                                          (%2 html-data %1))
                                       basic-info
                                       detailed-extractors)]
             (when detailed-info
-              (backend/record! detailed-info)
-              (util/sleep source-config sleep-ms)
-              detailed-info)))))))
+              (backend/record! detailed-info))
+            (util/sleep source-config sleep-ms)
+            detailed-info))))))
 
 (defn total-count [html-data]
   (let [count-str  (-> (util/select-first html-data [:span.totalcount])
@@ -145,7 +148,7 @@
             row-infos (->> (mapv (partial row-info row-sleep-ms) rows)
                            (filter some?))]
         (util/sleep source-config
-                    (if (zero? (count row-infos))
+                    (if (zero? used-row-count)
                       cycle-length-ms
                       (/ cycle-length-ms 2))))
       (catch Throwable t

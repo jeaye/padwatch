@@ -18,8 +18,7 @@
                       (:key source-config))
           walk-data (json/read-str (util/slurp-url url)
                                    :key-fn keyword)]
-      (when (>= (:walkscore walk-data) (:min-walkscore config/data))
-        (assoc row
-               :walkscore {:score (:walkscore walk-data)
-                           :description (:description walk-data)
-                           :url (:ws_link walk-data)})))))
+      (assoc row
+             :walkscore {:score (:walkscore walk-data)
+                         :description (:description walk-data)
+                         :url (:ws_link walk-data)}))))
