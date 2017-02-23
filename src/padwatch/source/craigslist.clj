@@ -106,7 +106,8 @@
 
 (defn row-info [sleep-ms row-data]
   (let [link-info (row-link row-data {:source "craigslist"})]
-    (when (empty (db/select {:id (:id link-info)}))
+    (if (not-empty (db/select {:id (:id link-info)}))
+      (println (str "skip - duplicate id " (:id link-info)))
       (let [basic-extractors [row-post-date row-price
                               row-where row-tags]
             basic-info (reduce #(when %1

@@ -24,6 +24,7 @@
                 :keys))
 
 (defn insert! [row-info]
+  (println (str "insert " (:url row-info)))
   (sql/insert listings
               (sql/values {:id (:id row-info)
                            :price (:price row-info)

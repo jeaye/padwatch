@@ -1,5 +1,6 @@
 (ns padwatch.util
-  (:require [net.cgrand.enlive-html :refer [html-resource select]]))
+  (:require [padwatch.db :as db]
+            [net.cgrand.enlive-html :refer [html-resource select]]))
 
 (def select-first (comp first select))
 
@@ -17,3 +18,9 @@
 (defn sleep [config ms]
   (println (format "[%s] sleep %sms" (:source config) ms))
   (Thread/sleep ms))
+
+(defn skip [row-info reason]
+  ; Note the ID so we can skip it, without reading, next time
+  (db/insert! row-info)
+  (println ("skip - " reason))
+  nil)
