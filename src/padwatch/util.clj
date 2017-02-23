@@ -22,5 +22,5 @@
 (defn skip [row-info reason]
   ; Note the ID so we can skip it, without reading, next time
   (db/insert! row-info)
-  (println ("skip - " reason))
+  (println (str "skip - " reason))
   nil)
