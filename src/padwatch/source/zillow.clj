@@ -76,25 +76,26 @@
         final-row))))
 
 (defn run []
-  (loop []
-    (try
-      (let [zones (:zones source-config)
-            cycle-length-ms (:cycle-length-ms source-config)
-            ; Take half as long as the cycle length to pull all rows
-            zone-length-ms (/ (/ cycle-length-ms 2) (max (count zones) 1))]
-        (doseq [zone zones]
-          (let [zone-url (format "%s/%s/apartments" (:base-url source-config) zone)
-                html-data (util/fetch-url zone-url)
-                row-data (rows html-data)
-                row-length-ms (/ zone-length-ms (max (count row-data) 1))
-                row-infos (->> (mapv (partial row-info row-length-ms) row-data)
-                               (filter some?))]
-            (when (zero? (count row-data))
-              (util/sleep source-config zone-length-ms))))
-        (util/sleep source-config
-                    (if (zero? (count zones))
-                      cycle-length-ms
-                      (/ cycle-length-ms 2))))
-      (catch Throwable t
-        (println t)))
-    (recur)))
+  (when (:enabled? source-config)
+    (loop []
+      (try
+        (let [zones (:zones source-config)
+              cycle-length-ms (:cycle-length-ms source-config)
+              ; Take half as long as the cycle length to pull all rows
+              zone-length-ms (/ (/ cycle-length-ms 2) (max (count zones) 1))]
+          (doseq [zone zones]
+            (let [zone-url (format "%s/%s/apartments" (:base-url source-config) zone)
+                  html-data (util/fetch-url zone-url)
+                  row-data (rows html-data)
+                  row-length-ms (/ zone-length-ms (max (count row-data) 1))
+                  row-infos (->> (mapv (partial row-info row-length-ms) row-data)
+                                 (filter some?))]
+              (when (zero? (count row-data))
+                (util/sleep source-config zone-length-ms))))
+          (util/sleep source-config
+                      (if (zero? (count zones))
+                        cycle-length-ms
+                        (/ cycle-length-ms 2))))
+        (catch Throwable t
+          (println t)))
+      (recur))))
