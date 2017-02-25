@@ -13,6 +13,7 @@
   (nil? (db/select {:price (:price row-info)
                     :sqft (:sqft row-info)
                     :style (:style row-info)
+                    :location (:location row-info)
                     :walkscore (-> row-info :walkscore :score)})))
 
 (defn row-filter [html-data row-info]

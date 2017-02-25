@@ -7,7 +7,7 @@
 
 (sql/defentity listings
   (sql/pk :id)
-  (sql/entity-fields :id :price :sqft :style :walkscore :url :source))
+  (sql/entity-fields :id :price :sqft :style :walkscore :location :url :source))
 
 (defn create! []
   (sql/exec-raw sqlite3-db
@@ -17,6 +17,7 @@
                      "sqft integer,"
                      "style text,"
                      "walkscore integer,"
+                     "location text,"
                      "url text,"
                      "source text"
                      ")")
@@ -29,6 +30,7 @@
                            :sqft (:sqft row-info)
                            :style (:style row-info)
                            :walkscore (-> row-info :walkscore :score)
+                           :location (:where row-info)
                            :url (:url row-info)
                            :source (:source row-info)})))
 
