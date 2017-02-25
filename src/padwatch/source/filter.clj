@@ -10,11 +10,11 @@
        (and (>= n min) (<= n max)))))
 
 (defn unique? [row-info]
-  (nil? (db/select {:price (:price row-info)
-                    :sqft (:sqft row-info)
-                    :style (:style row-info)
-                    :location (:location row-info)
-                    :walkscore (-> row-info :walkscore :score)})))
+  (empty? (db/select {:price (:price row-info)
+                      :sqft (:sqft row-info)
+                      :style (:style row-info)
+                      :location (:where row-info)
+                      :walkscore (-> row-info :walkscore :score)})))
 
 (defn row-filter [html-data row-info]
   (when
@@ -24,4 +24,5 @@
          (within? (:bathrooms row-info) (:bathrooms config/data))
          (within? (get-in row-info [:walkscore :score]) (:min-walkscore config/data) 100)
          (unique? row-info))
+    (println ["unfiltered" row-info])
     row-info))
