@@ -24,5 +24,4 @@
          (within? (:bathrooms row-info) (:bathrooms config/data))
          (within? (get-in row-info [:walkscore :score]) (:min-walkscore config/data) 100)
          (unique? row-info))
-    (println ["unfiltered" row-info])
     row-info))
