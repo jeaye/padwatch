@@ -4,6 +4,9 @@
 
 (def select-first (comp first select))
 
+(defn extract [m ks]
+  (reduce #(assoc %1 %2 (m %2)) {} keys))
+
 (defn fetch-url [url]
   (println (str "fetch " url))
   (html-resource (java.net.URL. url)))

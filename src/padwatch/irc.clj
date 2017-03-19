@@ -1,5 +1,6 @@
 (ns padwatch.irc
-  (:require [irclj.core :as irc]))
+  (:require [padwatch.util :as util]
+            [irclj.core :as irc]))
 
 (def nick "padwatch")
 (def channel "#padwatch")
@@ -31,14 +32,9 @@
   (irc/message @connection channel msg))
 
 (defn message-row! [row-info]
-  ; TODO: extract helper
-  (let [useful {:where (:where row-info)
-                :style (:style row-info)
-                :price (:price row-info)
-                :sqft (:sqft row-info)
-                :url (-> row-info :url shorten-url)
-                :walkscore (-> (:walkscore row-info)
-                               (update :url shorten-url)
-                               (dissoc :description))
-                }]
+  (let [useful (merge (util/extract row-info [:where :style :price :sqft])
+                      {:url (-> row-info :url shorten-url)
+                       :walkscore (-> (:walkscore row-info)
+                                      (update :url shorten-url)
+                                      (dissoc :description))})]
     (irc/message @connection channel (pr-str useful))))
