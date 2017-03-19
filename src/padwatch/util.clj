@@ -5,7 +5,7 @@
 (def select-first (comp first select))
 
 (defn extract [m ks]
-  (reduce #(assoc %1 %2 (m %2)) {} keys))
+  (reduce #(assoc %1 %2 (m %2)) {} ks))
 
 (defn fetch-url [url]
   (println (str "fetch " url))
